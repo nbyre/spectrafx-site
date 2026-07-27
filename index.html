@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPECTRAfx - Spectral FX Plugin by Arknet Audio</title>
+<meta name="description" content="Eight spectral processors, one chain, infinite combinations. SPECTRAfx is a modern FFT effects plugin for AU and VST3, Mac and Windows.">
+<meta property="og:title" content="SPECTRAfx - Spectral FX Plugin">
+<meta property="og:description" content="Reshape sound in the frequency domain. Eight spectral processors, one chain, infinite combinations.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600&family=Space+Grotesk:wght@400;500;600&display=swap');
+
+:root{
+  --shell:#080808;
+  --panel:#0e0a0a;
+  --panel2:#120c0c;
+  --border-dim:#1e1010;
+  --border-active:#2a1515;
+  --cream:#d2cec6;
+  --red:#cc3030;
+  --red-deep:#8a1a12;
+  --text:#dddddd;
+  --text-muted:#7a6a6a;
+  --text-dim:#4a3d3d;
+  --flir-blue:#4b3cc9;
+  --flir-teal:#2ea48c;
+  --flir-orange:#e08a2e;
+  --flir-red:#cc2a1a;
+}
+
+*{box-sizing:border-box; margin:0; padding:0;}
+
+body{
+  background:var(--shell);
+  color:var(--text);
+  font-family:'Space Grotesk', sans-serif;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+
+.wrap{max-width:1080px; margin:0 auto; padding:0 28px;}
+
+/* ---------- Header ---------- */
+header{
+  position:sticky; top:0; z-index:50;
+  background:rgba(8,8,8,0.88);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border-dim);
+}
+.header-inner{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 28px; max-width:1080px; margin:0 auto;
+}
+.logo{display:flex; align-items:baseline; gap:6px; font-family:'Barlow Condensed', sans-serif;}
+.logo .spectra{font-weight:600; font-size:26px; letter-spacing:0.5px; color:var(--cream);}
+.logo .fx{font-weight:300; font-size:15px; color:var(--red);}
+nav{display:flex; gap:32px; font-size:13px; letter-spacing:0.4px; color:var(--text-muted);}
+nav a{color:var(--text-muted); text-decoration:none; transition:color 0.2s;}
+nav a:hover{color:var(--cream);}
+.nav-buy{
+  border:1px solid var(--border-active); padding:8px 18px; border-radius:3px;
+  color:var(--cream) !important; font-size:12px;
+}
+.nav-buy:hover{border-color:var(--red); color:var(--red) !important;}
+
+/* ---------- Hero ---------- */
+.hero{padding:72px 0 40px; text-align:center;}
+.eyebrow{
+  font-size:13px; letter-spacing:2.5px; text-transform:uppercase;
+  color:var(--text-muted); margin-bottom:18px;
+}
+h1{
+  font-family:'Barlow Condensed', sans-serif;
+  font-weight:600;
+  font-size:clamp(40px, 7vw, 76px);
+  letter-spacing:0.5px;
+  color:var(--cream);
+  line-height:1.02;
+  margin-bottom:18px;
+}
+h1 .accent{color:var(--red);}
+.sub{
+  font-size:16px; color:var(--text-muted); max-width:520px; margin:0 auto 36px;
+}
+.cta-row{display:flex; gap:14px; justify-content:center; margin-bottom:14px;}
+.hero-subnote{font-size:12px; color:var(--text-dim); margin-bottom:56px;}
+.btn{
+  font-family:'Space Grotesk', sans-serif; font-size:14px; font-weight:500;
+  padding:13px 28px; border-radius:3px; text-decoration:none; letter-spacing:0.3px;
+  transition:all 0.2s; cursor:pointer; border:none;
+}
+.btn-primary{background:var(--red); color:#fff;}
+.btn-primary:hover{background:#e03a3a;}
+.btn-secondary{background:transparent; border:1px solid var(--border-active); color:var(--text);}
+.btn-secondary:hover{border-color:var(--text-muted);}
+
+/* ---------- Signature: live spectral demo ---------- */
+.demo-stage{
+  background:var(--panel);
+  border:1px solid var(--border-dim);
+  border-radius:6px;
+  overflow:hidden;
+  box-shadow:0 30px 80px -30px rgba(0,0,0,0.8);
+}
+.demo-canvas-wrap{position:relative; height:280px; background:#050505;}
+canvas{display:block; width:100%; height:100%;}
+.demo-label{
+  position:absolute; top:16px; left:20px;
+  font-size:11px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--text-dim);
+}
+.demo-state{
+  position:absolute; top:16px; right:20px;
+  font-size:11px; letter-spacing:1.5px; text-transform:uppercase;
+  padding:5px 12px; border-radius:20px;
+  border:1px solid var(--border-active);
+  transition:all 0.3s;
+}
+.demo-state.dry{color:var(--text-muted);}
+.demo-state.wet{color:var(--flir-orange); border-color:var(--flir-orange);}
+
+.demo-controls{
+  display:flex; align-items:center; gap:20px;
+  padding:20px 24px; border-top:1px solid var(--border-dim);
+  background:var(--panel2);
+}
+.play-btn{
+  width:44px; height:44px; border-radius:50%;
+  background:var(--red); border:none; color:#fff; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  transition:background 0.2s;
+}
+.play-btn:hover{background:#e03a3a;}
+.play-btn svg{width:16px; height:16px;}
+
+.toggle-group{
+  display:flex; background:var(--shell); border-radius:24px; border:1px solid var(--border-dim);
+  padding:3px; flex-shrink:0;
+}
+.toggle-btn{
+  font-family:'Space Grotesk', sans-serif; font-size:12px; font-weight:500; letter-spacing:0.5px;
+  padding:8px 20px; border-radius:20px; border:none; background:transparent;
+  color:var(--text-muted); cursor:pointer; transition:all 0.25s;
+}
+.toggle-btn.active{background:var(--red); color:#fff;}
+
+.material-label{font-size:12px; color:var(--text-muted); margin-left:auto;}
+.material-label select{
+  background:transparent; border:none; color:var(--cream); font-family:'Space Grotesk';
+  font-size:12px; cursor:pointer;
+}
+
+.demo-caption{
+  text-align:center; font-size:12px; color:var(--text-dim); margin-top:16px;
+}
+
+/* ---------- Feature slots ---------- */
+.section{padding:96px 0;}
+.section-head{text-align:center; margin-bottom:56px;}
+.section-eyebrow{font-size:13px; letter-spacing:2.5px; text-transform:uppercase; color:var(--text-muted); margin-bottom:14px;}
+h2{
+  font-family:'Barlow Condensed', sans-serif; font-weight:600; font-size:40px;
+  color:var(--cream); letter-spacing:0.3px;
+}
+
+.slot-grid{
+  display:grid; grid-template-columns:repeat(4, 1fr); gap:1px;
+  background:var(--border-dim); border:1px solid var(--border-dim); border-radius:6px; overflow:hidden;
+}
+.slot-card{
+  background:var(--panel); padding:26px 22px; position:relative;
+}
+.slot-num{
+  font-family:'Space Grotesk'; font-weight:600; font-size:11px;
+  color:var(--text-dim); letter-spacing:1px; margin-bottom:14px;
+}
+.slot-name{font-size:15px; font-weight:500; color:var(--cream); margin-bottom:8px;}
+.slot-desc{font-size:12.5px; color:var(--text-muted); line-height:1.5;}
+.slot-card::before{
+  content:''; position:absolute; left:0; top:0; bottom:0; width:2px;
+  background:var(--flir-red); opacity:0.5;
+}
+
+/* ---------- Screenshot showcase ---------- */
+.showcase{
+  background:linear-gradient(180deg, var(--panel2), var(--shell));
+  border:1px solid var(--border-dim); border-radius:6px;
+  padding:48px; text-align:center;
+}
+.showcase-frame{
+  background:#050505; border:1px solid var(--border-active); border-radius:4px;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--text-dim); font-size:13px; letter-spacing:1px;
+  margin-bottom:24px;
+  overflow:hidden;
+}
+.showcase-frame img{
+  width:100%; height:auto; display:block;
+}
+
+/* ---------- Rack reorder demo ---------- */
+.rack-demo{
+  background:#050505; border:1px solid var(--border-active); border-radius:4px;
+  padding:28px 40px; margin-bottom:24px; text-align:left;
+  display:flex; align-items:center; justify-content:center;
+}
+.rack-stage{
+  position:relative;
+  width:100%; max-width:420px;
+  height:376px; /* 4 rows * 84px + 3 gaps * 10px */
+}
+.rack-slot{
+  position:absolute; left:0; top:0; width:100%; height:84px;
+  background:linear-gradient(180deg, #1a0e0e, #0f0808);
+  border:1px solid var(--border-dim); border-radius:5px;
+  display:flex; align-items:center; gap:14px; padding:0 18px;
+  transition:transform 0.65s cubic-bezier(0.65, 0, 0.35, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+  will-change:transform;
+}
+.rack-slot::before{
+  content:''; position:absolute; left:0; top:8px; bottom:8px; width:3px; border-radius:2px;
+  background:var(--slot-accent, var(--flir-red)); opacity:0.6;
+}
+.rack-slot .rs-num{
+  font-family:'Space Grotesk'; font-weight:600; font-size:11px; color:var(--text-dim);
+  letter-spacing:1px; width:22px; flex-shrink:0;
+}
+.rack-slot .rs-name{font-size:14px; font-weight:500; color:var(--cream);}
+.rack-slot .rs-active-dot{
+  margin-left:auto; width:6px; height:6px; border-radius:50%; background:var(--text-dim);
+  transition:background 0.4s ease, box-shadow 0.4s ease;
+}
+.rack-slot.rs-lifted{
+  box-shadow:0 18px 34px -10px rgba(0,0,0,0.7), 0 0 0 1px var(--red);
+  border-color:var(--red);
+  z-index:10;
+}
+.rack-slot.rs-lifted .rs-active-dot{
+  background:var(--red); box-shadow:0 0 8px 1px rgba(204,48,48,0.6);
+}
+.rack-caption{
+  text-align:center; font-size:12px; color:var(--text-dim); margin-top:0;
+}
+
+/* ---------- Footer / buy ---------- */
+footer{
+  border-top:1px solid var(--border-dim); padding:64px 0 40px;
+}
+.footer-buy{
+  text-align:center; margin-bottom:56px;
+}
+.price{font-family:'Barlow Condensed'; font-weight:600; font-size:56px; color:var(--cream);}
+.price-note{font-size:12px; color:var(--text-dim); margin-bottom:24px;}
+.footer-buy-row{display:flex; gap:14px; justify-content:center;}
+.footer-meta{
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:12px; color:var(--text-dim); padding-top:24px; border-top:1px solid var(--border-dim);
+  flex-wrap:wrap; gap:12px;
+}
+.footer-meta a{color:var(--text-dim); text-decoration:none;}
+
+/* ---------- FAQ ---------- */
+.faq-list{max-width:680px; margin:0 auto;}
+.faq-item{
+  border-bottom:1px solid var(--border-dim);
+  padding:20px 4px;
+}
+.faq-item summary{
+  cursor:pointer; font-size:15px; font-weight:500; color:var(--cream);
+  list-style:none; display:flex; justify-content:space-between; align-items:center;
+}
+.faq-item summary::-webkit-details-marker{display:none;}
+.faq-item summary::after{
+  content:'+'; font-size:20px; color:var(--text-dim); font-weight:300; margin-left:16px;
+  transition:transform 0.2s ease;
+}
+.faq-item[open] summary::after{transform:rotate(45deg);}
+.faq-item p{font-size:13.5px; color:var(--text-muted); margin-top:14px; line-height:1.6; max-width:560px;}
+
+/* ---------- Email capture ---------- */
+.email-section{text-align:center;}
+.email-form{
+  display:flex; gap:10px; justify-content:center; max-width:420px; margin:0 auto;
+}
+.email-form input{
+  flex:1; background:var(--panel); border:1px solid var(--border-dim); border-radius:3px;
+  padding:13px 16px; color:var(--text); font-family:'Space Grotesk'; font-size:14px;
+}
+.email-form input:focus{outline:none; border-color:var(--red);}
+.email-form input::placeholder{color:var(--text-dim);}
+.email-status{font-size:12px; color:var(--text-dim); margin-top:14px; min-height:16px;}
+
+@media (max-width:720px){
+  .slot-grid{grid-template-columns:repeat(2,1fr);}
+  nav{display:none;}
+  .demo-controls{flex-wrap:wrap;}
+  .material-label{margin-left:0;}
+  .footer-buy-row{flex-direction:column;}
+}
+
+@media (max-width:600px){
+  .email-form{flex-direction:column;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo"><span class="spectra">SPECTRA</span><span class="fx">FX</span></div>
+    <nav>
+      <a href="#demos">Demos</a>
+      <a href="#features">Features</a>
+      <a href="#buy" class="nav-buy">Buy - $49</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="hero">
+    <div class="eyebrow">Arknet Audio</div>
+    <h1>Reshape sound<br>in the <span class="accent">frequency domain.</span></h1>
+    <p class="sub">Eight spectral processors, one chain, infinite combinations. Hear what's actually inside the signal, then take it apart.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="#buy">Buy SPECTRAfx - $49</a>
+      <a class="btn btn-secondary" href="#try-free">Try it free</a>
+    </div>
+    <p class="hero-subnote">Free version: 3 slots, no preset saving. No credit card.</p>
+
+    <div class="showcase-frame" style="margin-bottom:32px;">
+      <img src="spectrafx-screenshot.png" alt="SPECTRAfx plugin interface showing the spectral chain with Smear, Grid, and Extract modules active">
+    </div>
+
+    <div class="section-eyebrow" style="margin-bottom:16px;">Hear it in action</div>
+    <div class="demo-stage" id="demos">
+      <div class="demo-canvas-wrap">
+        <div class="demo-label">Live spectrum</div>
+        <div class="demo-state dry" id="stateTag">Dry</div>
+        <canvas id="waterfall"></canvas>
+      </div>
+      <div class="demo-controls">
+        <button class="play-btn" id="playBtn">
+          <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <div class="toggle-group">
+          <button class="toggle-btn active" id="btnDry">Before</button>
+          <button class="toggle-btn" id="btnWet">After</button>
+        </div>
+        <div class="material-label">
+          Material:
+          <select id="materialSelect">
+            <option value="pad">Synth pad</option>
+            <option value="pluck">Pluck</option>
+            <option value="noise">Noise sweep</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <p class="demo-caption">Placeholder audio, synthesized in-browser for this mockup. Final site uses recorded before/after pairs across drums, vocals, and synths.</p>
+  </section>
+
+  <section class="section" id="features">
+    <div class="section-head">
+      <div class="section-eyebrow">The chain</div>
+      <h2>Eight slots. Any order.</h2>
+    </div>
+    <div class="slot-grid">
+      <div class="slot-card"><div class="slot-num">01</div><div class="slot-name">Spectral EQ</div><div class="slot-desc">Bell-curve gain across a chosen band, up to ±24dB.</div></div>
+      <div class="slot-card"><div class="slot-num">02</div><div class="slot-name">Spectral Gate</div><div class="slot-desc">Threshold-based bin gating with soft knee and hold.</div></div>
+      <div class="slot-card"><div class="slot-num">03</div><div class="slot-name">Phase Smear</div><div class="slot-desc">Magnitude-only temporal blur, phase stays intact.</div></div>
+      <div class="slot-card"><div class="slot-num">04</div><div class="slot-name">Harmonic Shift</div><div class="slot-desc">Phase-vocoder pitch shifting with sinc interpolation.</div></div>
+      <div class="slot-card"><div class="slot-num">05</div><div class="slot-name">Frequency Mask</div><div class="slot-desc">Isolate or remove a band with a smooth taper edge.</div></div>
+      <div class="slot-card"><div class="slot-num">06</div><div class="slot-name">HarmFilter</div><div class="slot-desc">Comb boost or cut at multiples of a fundamental.</div></div>
+      <div class="slot-card"><div class="slot-num">07</div><div class="slot-name">HarmExtract</div><div class="slot-desc">Pull the loudest harmonic peaks out of any sound.</div></div>
+      <div class="slot-card"><div class="slot-num">08</div><div class="slot-name">Spectral Clip</div><div class="slot-desc">Adaptive clipping with energy redistribution.</div></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="section-eyebrow">Interface</div>
+      <h2>Built to be played, not programmed.</h2>
+    </div>
+    <div class="showcase">
+      <div class="rack-demo">
+        <div class="rack-stage" id="rackStage">
+          <div class="rack-slot" data-id="0" style="--slot-accent: var(--flir-red);">
+            <span class="rs-num">01</span><span class="rs-name">Spectral EQ</span><span class="rs-active-dot"></span>
+          </div>
+          <div class="rack-slot" data-id="1" style="--slot-accent: var(--flir-orange);">
+            <span class="rs-num">02</span><span class="rs-name">HarmFilter</span><span class="rs-active-dot"></span>
+          </div>
+          <div class="rack-slot" data-id="2" style="--slot-accent: var(--flir-teal);">
+            <span class="rs-num">03</span><span class="rs-name">Phase Smear</span><span class="rs-active-dot"></span>
+          </div>
+          <div class="rack-slot" data-id="3" style="--slot-accent: var(--flir-blue);">
+            <span class="rs-num">04</span><span class="rs-name">HarmExtract</span><span class="rs-active-dot"></span>
+          </div>
+        </div>
+      </div>
+      <p class="sub" style="margin-bottom:0;">Drag to reorder the chain. Hit randomize and land somewhere musical. Every knob does something you can hear in under ten seconds.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="section-eyebrow">Before you buy</div>
+      <h2>Questions</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item">
+        <summary>Which DAWs does it work in?</summary>
+        <p>Any DAW that supports AU or VST3. Tested primarily in Logic Pro (AU) and Reaper (VST3), and confirmed working in Ableton Live.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Mac and Windows, or Mac only?</summary>
+        <p>Both. AU is Mac-only by nature, VST3 runs on both Mac and Windows.</p>
+      </details>
+      <details class="faq-item">
+        <summary>What's different between the free and paid version?</summary>
+        <p>The free version gives you 3 of the 8 slots and doesn't save presets. The paid version unlocks all 8 slots, preset saving, and the full randomize system.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Does it need an internet connection to run?</summary>
+        <p>Only once, to activate your license after purchase. After that, it works fully offline.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Do you offer refunds?</summary>
+        <p>Yes, within 14 days of purchase if it's not working out for you. Reach out through the support link below.</p>
+      </details>
+      <details class="faq-item">
+        <summary>How many machines can I activate it on?</summary>
+        <p>Two machines per license. Need a third? Get in touch and we'll sort it out.</p>
+      </details>
+    </div>
+  </section>
+
+  <section class="section email-section">
+    <div class="section-head">
+      <div class="section-eyebrow">Stay in the loop</div>
+      <h2>Get notified at launch</h2>
+    </div>
+    <p class="sub" style="margin-bottom:28px;">Early access, launch pricing, and the occasional preset pack. No spam, unsubscribe anytime.</p>
+    <form class="email-form" id="emailForm">
+      <input type="email" placeholder="you@email.com" required aria-label="Email address">
+      <button type="submit" class="btn btn-primary">Notify me</button>
+    </form>
+    <p class="email-status" id="emailStatus"></p>
+  </section>
+</div>
+
+<footer id="buy">
+  <div class="wrap">
+    <div class="footer-buy">
+      <div class="price">$49</div>
+      <div class="price-note">Introductory price. AU / VST3, Mac and Windows.</div>
+      <div class="footer-buy-row">
+        <a class="btn btn-primary" href="#">Buy SPECTRAfx</a>
+        <a class="btn btn-secondary" id="try-free" href="#">Download free version</a>
+      </div>
+    </div>
+    <div class="footer-meta">
+      <span>© 2026 Arknet Audio</span>
+      <a href="#">Support</a>
+      <a href="#">License terms</a>
+      <a href="#">arknetaudio.com</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ---------- Synthesized before/after audio demo ----------
+// This is a placeholder engine standing in for real recorded audio pairs.
+// It builds a short loop live using Web Audio oscillators/noise, then
+// routes it through two parallel chains (dry / processed) so toggling
+// never restarts playback, just swaps which chain is audible.
+
+let audioCtx = null;
+let isPlaying = false;
+let currentMode = 'dry'; // 'dry' or 'wet'
+let dryGain, wetGain, analyserDry, analyserWet;
+let sourceNodes = [];
+
+const materials = {
+  pad: { type: 'sawtooth', freqs: [220, 277, 330], filterFreq: 2200 },
+  pluck: { type: 'triangle', freqs: [196, 246, 293], filterFreq: 4000 },
+  noise: { type: 'noise', freqs: [], filterFreq: 8000 }
+};
+
+function buildGraph(material) {
+  stopGraph();
+  const m = materials[material];
+  dryGain = audioCtx.createGain();
+  wetGain = audioCtx.createGain();
+  dryGain.gain.value = 1;
+  wetGain.gain.value = 0;
+
+  analyserDry = audioCtx.createAnalyser();
+  analyserDry.fftSize = 256;
+  analyserWet = audioCtx.createAnalyser();
+  analyserWet.fftSize = 256;
+
+  dryGain.connect(analyserDry);
+  wetGain.connect(analyserWet);
+  dryGain.connect(audioCtx.destination);
+  wetGain.connect(audioCtx.destination);
+
+  sourceNodes = [];
+
+  if (m.type === 'noise') {
+    const bufferSize = audioCtx.sampleRate * 2;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+    const src1 = audioCtx.createBufferSource();
+    src1.buffer = buffer; src1.loop = true;
+    const dryFilter = audioCtx.createBiquadFilter();
+    dryFilter.type = 'lowpass'; dryFilter.frequency.value = 8000;
+    src1.connect(dryFilter).connect(dryGain);
+
+    const src2 = audioCtx.createBufferSource();
+    src2.buffer = buffer; src2.loop = true;
+    const wetFilter = audioCtx.createBiquadFilter();
+    wetFilter.type = 'bandpass'; wetFilter.frequency.value = 1200; wetFilter.Q.value = 8;
+    const lfo = audioCtx.createOscillator();
+    lfo.frequency.value = 0.3;
+    const lfoGain = audioCtx.createGain();
+    lfoGain.gain.value = 900;
+    lfo.connect(lfoGain).connect(wetFilter.frequency);
+    lfo.start();
+    src2.connect(wetFilter).connect(wetGain);
+
+    src1.start(); src2.start();
+    sourceNodes.push(src1, src2, lfo);
+  } else {
+    m.freqs.forEach((f) => {
+      const osc1 = audioCtx.createOscillator();
+      osc1.type = m.type; osc1.frequency.value = f;
+      const dryFilter = audioCtx.createBiquadFilter();
+      dryFilter.type = 'lowpass'; dryFilter.frequency.value = m.filterFreq;
+      osc1.connect(dryFilter).connect(dryGain);
+
+      const osc2 = audioCtx.createOscillator();
+      osc2.type = m.type; osc2.frequency.value = f;
+      const wetFilter = audioCtx.createBiquadFilter();
+      wetFilter.type = 'bandpass'; wetFilter.frequency.value = f * 2; wetFilter.Q.value = 12;
+      const lfo = audioCtx.createOscillator();
+      lfo.frequency.value = 0.2 + Math.random() * 0.3;
+      const lfoGain = audioCtx.createGain();
+      lfoGain.gain.value = f * 1.5;
+      lfo.connect(lfoGain).connect(wetFilter.frequency);
+      lfo.start();
+      osc2.connect(wetFilter).connect(wetGain);
+
+      osc1.start(); osc2.start();
+      sourceNodes.push(osc1, osc2, lfo);
+    });
+  }
+}
+
+function stopGraph() {
+  sourceNodes.forEach(n => { try { n.stop(); } catch(e) {} });
+  sourceNodes = [];
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  if (!dryGain || !wetGain) return;
+  const now = audioCtx.currentTime;
+  dryGain.gain.cancelScheduledValues(now);
+  wetGain.gain.cancelScheduledValues(now);
+  dryGain.gain.linearRampToValueAtTime(mode === 'dry' ? 1 : 0, now + 0.05);
+  wetGain.gain.linearRampToValueAtTime(mode === 'wet' ? 1 : 0, now + 0.05);
+
+  document.getElementById('btnDry').classList.toggle('active', mode === 'dry');
+  document.getElementById('btnWet').classList.toggle('active', mode === 'wet');
+  const tag = document.getElementById('stateTag');
+  tag.textContent = mode === 'dry' ? 'Dry' : 'Processed';
+  tag.classList.toggle('dry', mode === 'dry');
+  tag.classList.toggle('wet', mode === 'wet');
+}
+
+document.getElementById('btnDry').onclick = () => setMode('dry');
+document.getElementById('btnWet').onclick = () => setMode('wet');
+
+document.getElementById('materialSelect').onchange = (e) => {
+  if (isPlaying) buildGraph(e.target.value);
+};
+
+document.getElementById('playBtn').onclick = () => {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  isPlaying = !isPlaying;
+  const icon = document.getElementById('playIcon');
+  if (isPlaying) {
+    buildGraph(document.getElementById('materialSelect').value);
+    setMode(currentMode);
+    icon.innerHTML = '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>';
+  } else {
+    stopGraph();
+    icon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+  }
+};
+
+// ---------- Canvas waterfall visualization ----------
+const canvas = document.getElementById('waterfall');
+const ctx = canvas.getContext('2d');
+let dpr = window.devicePixelRatio || 1;
+
+function resizeCanvas() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+}
+resizeCanvas();
+window.addEventListener('resize', () => { ctx.setTransform(1,0,0,1,0,0); resizeCanvas(); });
+
+// FLIR palette stops
+function flirColor(t) {
+  // t: 0 (quiet) -> 1 (loud)
+  const stops = [
+    [0.00, [10, 8, 20]],
+    [0.25, [75, 60, 201]],
+    [0.55, [46, 164, 140]],
+    [0.80, [224, 138, 46]],
+    [1.00, [204, 42, 26]]
+  ];
+  for (let i = 0; i < stops.length - 1; i++) {
+    const [t0, c0] = stops[i];
+    const [t1, c1] = stops[i+1];
+    if (t >= t0 && t <= t1) {
+      const f = (t - t0) / (t1 - t0);
+      return [
+        Math.round(c0[0] + (c1[0]-c0[0])*f),
+        Math.round(c0[1] + (c1[1]-c0[1])*f),
+        Math.round(c0[2] + (c1[2]-c0[2])*f)
+      ];
+    }
+  }
+  return stops[stops.length-1][1];
+}
+
+let history = [];
+const HISTORY_LEN = 60;
+
+function draw() {
+  requestAnimationFrame(draw);
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const w = rect.width, h = rect.height;
+  ctx.fillStyle = '#050505';
+  ctx.fillRect(0, 0, w, h);
+
+  let data;
+  const analyser = currentMode === 'dry' ? analyserDry : analyserWet;
+  if (isPlaying && analyser) {
+    data = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(data);
+  } else {
+    data = new Uint8Array(64);
+  }
+
+  history.push(data);
+  if (history.length > HISTORY_LEN) history.shift();
+
+  const rowH = h / HISTORY_LEN;
+  const bins = data.length;
+  const colW = w / bins;
+
+  for (let row = 0; row < history.length; row++) {
+    const rowData = history[row];
+    const y = h - (row + 1) * rowH;
+    const depthFade = 0.3 + 0.7 * (row / HISTORY_LEN);
+    for (let i = 0; i < bins; i++) {
+      const v = rowData[i] / 255;
+      if (v < 0.03) continue;
+      const [r,g,b] = flirColor(v);
+      ctx.fillStyle = `rgba(${r},${g},${b},${depthFade})`;
+      ctx.fillRect(i * colW, y, colW + 0.5, rowH + 0.5);
+    }
+  }
+}
+draw();
+
+// ---------- Rack reorder demo ----------
+// Concept: 4 slot elements live at fixed DOM positions but are moved purely
+// with CSS transforms. `order` tracks which original slot (by data-id) sits
+// in each visual row. Swapping two entries in `order` and re-applying
+// transforms lets CSS transitions animate the move, no manual tweening needed.
+(function () {
+  const stage = document.getElementById('rackStage');
+  const slots = Array.from(stage.querySelectorAll('.rack-slot'));
+  const rowStep = 94; // 84px slot height + 10px gap
+  let order = [0, 1, 2, 3]; // order[visualRow] = original slot id
+
+  function applyPositions() {
+    slots.forEach((el) => {
+      const id = Number(el.dataset.id);
+      const row = order.indexOf(id);
+      el.style.transform = `translateY(${row * rowStep}px)`;
+    });
+  }
+
+  function slotEl(id) {
+    return slots.find((el) => Number(el.dataset.id) === id);
+  }
+
+  function moveToFront(id) {
+    const el = slotEl(id);
+    el.classList.add('rs-lifted');
+    setTimeout(() => {
+      order = [id, ...order.filter((x) => x !== id)];
+      applyPositions();
+    }, 380);
+    setTimeout(() => {
+      el.classList.remove('rs-lifted');
+    }, 380 + 700);
+  }
+
+  function resetOrder() {
+    const el = slotEl(order[0]);
+    el.classList.add('rs-lifted');
+    setTimeout(() => {
+      order = [0, 1, 2, 3];
+      applyPositions();
+    }, 380);
+    setTimeout(() => {
+      el.classList.remove('rs-lifted');
+    }, 380 + 700);
+  }
+
+  applyPositions();
+
+  // Choreographed loop: lift "Phase Smear" to the top, hold, then settle
+  // back to the original order, repeating indefinitely.
+  function loop() {
+    setTimeout(() => {
+      moveToFront(2); // Phase Smear jumps to slot 1
+      setTimeout(() => {
+        resetOrder(); // settle back to the original chain order
+        setTimeout(loop, 2600);
+      }, 2600);
+    }, 1800);
+  }
+  loop();
+})();
+
+// ---------- Email capture ----------
+// This form doesn't send anywhere yet, it's a placeholder that just confirms
+// the UI feels right. To make it real, you have two straightforward options:
+//
+// Option A (simplest): use a form service like Formspree or Buttondown.
+// You'd change the <form> tag's action/method to point at their endpoint,
+// and they handle storage and email sending for you. No backend of your own.
+//
+// Option B (more control): a small serverless function (Cloudflare Worker,
+// Vercel function) that receives the email and adds it to a mailing list
+// provider (Mailchimp, ConvertKit) via their API. More setup, more flexibility.
+//
+// Lemon Squeezy also automatically captures emails from anyone who actually
+// buys or downloads the free demo, so this form is specifically for people
+// who want updates *before* either of those things happens.
+document.getElementById('emailForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  const status = document.getElementById('emailStatus');
+  status.textContent = 'Thanks, you\'re on the list. (placeholder, not yet connected to a real list)';
+  this.reset();
+});
+</script>
+
+</body>
+</html>
